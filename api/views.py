@@ -1,16 +1,13 @@
 import asyncio
 import time
-from django.http import HttpResponse
+from django.http import JsonResponse # Usando JsonResponse já que a loja é sua API
 
-# VIEW SÍNCRONA (Exemplo de Blocking Call)
-# Esta função trava o servidor enquanto espera.
+# VIEW SÍNCRONA (Exemplo de Blocking Call solicitada)
 def contador_sincrono(request):
-    time.sleep(3)  # Bloqueia a thread
-    return HttpResponse("View Síncrona finalizada (Bloqueante)")
+    time.sleep(3)  # Isso bloqueia o servidor
+    return JsonResponse({"status": "Síncrono finalizado", "mensagem": "Esta foi uma blocking call."})
 
-# VIEW ASSÍNCRONA (Django Async View)
-# Requisito: async def + await
-# Esta função libera o servidor para outras tarefas enquanto espera.
+# VIEW ASSÍNCRONA (Django Async View solicitada)
 async def contador_assincrono(request):
-    await asyncio.sleep(3)  # Não bloqueia a thread
-    return HttpResponse("View Assíncrona finalizada (Não-bloqueante)")
+    await asyncio.sleep(3)  # Isso NÃO bloqueia o servidor
+    return JsonResponse({"status": "Assíncrono finalizado", "mensagem": "Executado sem bloquear outras requisições!"})
