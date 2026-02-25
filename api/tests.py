@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from loja.models import Product, Category, Order
+from api.models import Product, Category, Order
 
 class IntegrityModelTest(TestCase):
 
