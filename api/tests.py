@@ -16,13 +16,13 @@ class IntegridadeModelosTest(TestCase):
         self.product.category.add(self.category)
 
     def test_integridade_category(self):
-        """Verifica se a categoria existe"""
+        """Verifica se a categoria foi criada corretamente"""
         self.assertEqual(self.category.title, 'Periféricos')
 
     def test_integridade_product(self):
         """Verifica se o produto está ligado à categoria correta"""
         self.assertEqual(self.product.title, 'Microfone Redragon')
-        self.assertEqual(self.product.category.first().title, 'Periféricos')
+        self.assertIn(self.category, self.product.category.all())
 
     def test_integridade_order(self):
         """Verifica se o pedido (Order) liga o utilizador ao produto"""

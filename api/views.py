@@ -1,13 +1,25 @@
 import asyncio
 import time
-from django.http import HttpResponse
+from django.http import JsonResponse
 
-# View Síncrona (Exemplo de Blocking Call)
+# Simulação de um contador ou tarefa pesada síncrona
 def contador_sincrono(request):
-    time.sleep(2) # Trava o servidor por 2 segundos
-    return HttpResponse("View Síncrona finalizada (Bloqueante).")
+    start_time = time.time()
+    time.sleep(2)  # Chamada bloqueante
+    duration = time.time() - start_time
+    return JsonResponse({
+        "status": "Síncrono finalizado (Bloqueante)",
+        "segundos_esperados": 2,
+        "duracao_real": round(duration, 2)
+    })
 
-# View Assíncrona (Django Async View)
+# View Assíncrona correta
 async def contador_assincrono(request):
-    await asyncio.sleep(2) # Espera sem travar o servidor
-    return HttpResponse("View Assíncrona finalizada (Não-bloqueante)!")
+    start_time = time.time()
+    await asyncio.sleep(2)  # Chamada não-bloqueante
+    duration = time.time() - start_time
+    return JsonResponse({
+        "status": "Assíncrono finalizado (Não-bloqueante)",
+        "segundos_esperados": 2,
+        "duracao_real": round(duration, 2)
+    })
