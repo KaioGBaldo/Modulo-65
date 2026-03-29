@@ -1,34 +1,22 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
-from api.models import Product, Category, Order
+from .models import Product
+from .serializers import ProductSerializer
 
-class IntegridadeModelosTest(TestCase):
-
+class ProductSerializerTest(TestCase):
     def setUp(self):
-        # 1. Criamos o utilizador para o Pedido
-        self.user = User.objects.create_user(username='kaio_teste', password='123')
-        
-        # 2. Criamos a Categoria
-        self.category = Category.objects.create(title='Periféricos')
-        
-        # 3. Criamos o Produto e associamos à Categoria
-        self.product = Product.objects.create(title='Microfone Redragon', price=300.00)
-        self.product.category.add(self.category)
+        self.product_attributes = {
+            'name': 'Teclado Mecânico',
+            'description': 'Switch Blue, RGB',
+            'price': '250.00'
+        }
+        self.product = Product.objects.create(**self.product_attributes)
+        self.serializer = ProductSerializer(instance=self.product)
 
-    def test_integridade_category(self):
-        """Verifica se a categoria foi criada corretamente"""
-        self.assertEqual(self.category.title, 'Periféricos')
+    def test_serializer_contains_expected_fields(self):
+        data = self.serializer.data
+        self.assertEqual(set(data.keys()), set(['id', 'name', 'description', 'price', 'created_at']))
 
-    def test_integridade_product(self):
-        """Verifica se o produto está ligado à categoria correta"""
-        self.assertEqual(self.product.title, 'Microfone Redragon')
-        self.assertIn(self.category, self.product.category.all())
-
-    def test_integridade_order(self):
-        """Verifica se o pedido (Order) liga o utilizador ao produto"""
-        order = Order.objects.create(user=self.user)
-        order.product.add(self.product)
-        
-        self.assertEqual(order.user.username, 'kaio_teste')
-        self.assertEqual(order.product.count(), 1)
-        self.assertEqual(order.product.first().title, 'Microfone Redragon')
+    def test_serializer_field_content(self):
+        data = self.serializer.data
+        self.assertEqual(data['name'], self.product_attributes['name'])
+        self.assertEqual(data['price'], self.product_attributes['price'])
