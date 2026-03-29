@@ -1,7 +1,10 @@
-from django.urls import path
-from api import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ProductViewSet
+
+router = DefaultRouter()
+router.register(r'products', ProductViewSet)
 
 urlpatterns = [
-    path('sync/', views.contador_sincrono, name='contador_sincrono'),
-    path('async/', views.contador_assincrono, name='contador_assincrono'),
+    path('', include(router.urls)),
 ]
