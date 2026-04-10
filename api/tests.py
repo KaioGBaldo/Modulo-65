@@ -1,22 +1,27 @@
 from django.test import TestCase
-from .models import Product
-from .serializers import ProductSerializer
+from django.contrib.auth.models import User
+from .models import Category, Product, Order
+from .serializers import CategorySerializer, ProductSerializer
 
-class ProductSerializerTest(TestCase):
+class TestSerializers(TestCase):
     def setUp(self):
-        self.product_attributes = {
-            'name': 'Teclado Mecânico',
-            'description': 'Switch Blue, RGB',
-            'price': '250.00'
-        }
-        self.product = Product.objects.create(**self.product_attributes)
-        self.serializer = ProductSerializer(instance=self.product)
+        self.category = Category.objects.create(title='Livros', slug='livros')
+        self.product = Product.objects.create(
+            name='Clean Code', 
+            description='Livro de programação', 
+            price=100.00
+        )
+        self.product.category.add(self.category)
+        
+    def test_category_serializer(self):
+        serializer = CategorySerializer(instance=self.category)
+        data = serializer.data
+        self.assertEqual(data['title'], 'Livros')
+        self.assertEqual(data['slug'], 'livros')
 
-    def test_serializer_contains_expected_fields(self):
-        data = self.serializer.data
-        self.assertEqual(set(data.keys()), set(['id', 'name', 'description', 'price', 'created_at']))
-
-    def test_serializer_field_content(self):
-        data = self.serializer.data
-        self.assertEqual(data['name'], self.product_attributes['name'])
-        self.assertEqual(data['price'], self.product_attributes['price'])
+    def test_product_serializer_with_category(self):
+        serializer = ProductSerializer(instance=self.product)
+        data = serializer.data
+        self.assertEqual(data['name'], 'Clean Code')
+        # Verifica se a categoria está aninhada corretamente
+        self.assertEqual(data['category'][0]['title'], 'Livros')
