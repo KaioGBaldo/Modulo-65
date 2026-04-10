@@ -1,34 +1,27 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from api.models import Product, Category, Order
+from .models import Category, Product, Order
+from .serializers import CategorySerializer, ProductSerializer
 
-class IntegridadeModelosTest(TestCase):
-
+class TestSerializers(TestCase):
     def setUp(self):
-        # 1. Criamos o utilizador para o Pedido
-        self.user = User.objects.create_user(username='kaio_teste', password='123')
-        
-        # 2. Criamos a Categoria
-        self.category = Category.objects.create(title='Periféricos')
-        
-        # 3. Criamos o Produto e associamos à Categoria
-        self.product = Product.objects.create(title='Microfone Redragon', price=300.00)
+        self.category = Category.objects.create(title='Livros', slug='livros')
+        self.product = Product.objects.create(
+            name='Clean Code', 
+            description='Livro de programação', 
+            price=100.00
+        )
         self.product.category.add(self.category)
-
-    def test_integridade_category(self):
-        """Verifica se a categoria foi criada corretamente"""
-        self.assertEqual(self.category.title, 'Periféricos')
-
-    def test_integridade_product(self):
-        """Verifica se o produto está ligado à categoria correta"""
-        self.assertEqual(self.product.title, 'Microfone Redragon')
-        self.assertIn(self.category, self.product.category.all())
-
-    def test_integridade_order(self):
-        """Verifica se o pedido (Order) liga o utilizador ao produto"""
-        order = Order.objects.create(user=self.user)
-        order.product.add(self.product)
         
-        self.assertEqual(order.user.username, 'kaio_teste')
-        self.assertEqual(order.product.count(), 1)
-        self.assertEqual(order.product.first().title, 'Microfone Redragon')
+    def test_category_serializer(self):
+        serializer = CategorySerializer(instance=self.category)
+        data = serializer.data
+        self.assertEqual(data['title'], 'Livros')
+        self.assertEqual(data['slug'], 'livros')
+
+    def test_product_serializer_with_category(self):
+        serializer = ProductSerializer(instance=self.product)
+        data = serializer.data
+        self.assertEqual(data['name'], 'Clean Code')
+        # Verifica se a categoria está aninhada corretamente
+        self.assertEqual(data['category'][0]['title'], 'Livros')
