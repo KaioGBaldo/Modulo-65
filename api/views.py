@@ -1,10 +1,15 @@
 from rest_framework import viewsets
-from .models import Product
-from .serializers import ProductSerializer
+from .models import Product, Category, Order
+from .serializers import ProductSerializer, CategorySerializer, OrderSerializer
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all().order_by('id')
+    serializer_class = CategorySerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint que permite visualizar ou editar produtos.
-    """
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('id')
     serializer_class = ProductSerializer
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all().order_by('id')
+    serializer_class = OrderSerializer
