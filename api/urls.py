@@ -8,6 +8,6 @@ router.register(r'category', CategoryViewSet)
 router.register(r'order', OrderViewSet)
 
 urlpatterns = [
-    path('contador/', async_counter_view, name='async_contador'), # Rota exigida no último feedback
+    path('contador/', async_counter_view, name='async_contador'),
     path('', include(router.urls)),
 ]
