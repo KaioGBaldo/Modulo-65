@@ -1,25 +1,48 @@
 import asyncio
-import time
 from django.http import JsonResponse
+from rest_framework import viewsets
+from .models import Product, Category, Order
+from .serializers import ProductSerializer, CategorySerializer, OrderSerializer
 
-# Simulação de um contador ou tarefa pesada síncrona
-def contador_sincrono(request):
-    start_time = time.time()
-    time.sleep(2)  # Chamada bloqueante
-    duration = time.time() - start_time
-    return JsonResponse({
-        "status": "Síncrono finalizado (Bloqueante)",
-        "segundos_esperados": 2,
-        "duracao_real": round(duration, 2)
-    })
+# ---------------------------------------------------------
+# Viewsets para os Modelos (Exigência do DRF / Bookstores)
+# ---------------------------------------------------------
 
-# View Assíncrona correta
-async def contador_assincrono(request):
-    start_time = time.time()
-    await asyncio.sleep(2)  # Chamada não-bloqueante
-    duration = time.time() - start_time
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all().order_by('id')
+    serializer_class = CategorySerializer
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all().order_by('id')
+    serializer_class = ProductSerializer
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all().order_by('id')
+    serializer_class = OrderSerializer
+
+
+# ---------------------------------------------------------
+# View Assíncrona com Contador (Exigência do Último Feedback)
+# ---------------------------------------------------------
+
+# Um contador global simples para fins demonstrativos da view
+contador_acessos = 0
+
+async def async_counter_view(request):
+    """
+    View Assíncrona que demonstra conceitos de Non-blocking calls.
+    Utiliza asyncio.sleep para não travar a execução do servidor.
+    """
+    global contador_acessos
+    
+    # Simula uma operação assíncrona/I-O bound de 1 segundo
+    # Sem efetuar uma blocking call convencional
+    await asyncio.sleep(1) 
+    
+    contador_acessos += 1
+    
     return JsonResponse({
-        "status": "Assíncrono finalizado (Não-bloqueante)",
-        "segundos_esperados": 2,
-        "duracao_real": round(duration, 2)
+        "status": "sucesso",
+        "mensagem": "Operação assíncrona executada com sucesso!",
+        "contador_total_acessos": contador_acessos
     })

@@ -1,34 +1,69 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from api.models import Product, Category, Order
+from .models import Category, Product, Order
+from .serializers import CategorySerializer, ProductSerializer, OrderSerializer
 
-class IntegridadeModelosTest(TestCase):
-
+class TestSerializers(TestCase):
     def setUp(self):
-        # 1. Criamos o utilizador para o Pedido
-        self.user = User.objects.create_user(username='kaio_teste', password='123')
+        # Criando massa de dados para os testes
+        self.user = User.objects.create_user(username='testuser', password='password123')
         
-        # 2. Criamos a Categoria
-        self.category = Category.objects.create(title='Periféricos')
+        self.category = Category.objects.create(title='Livros', slug='livros', active=True)
         
-        # 3. Criamos o Produto e associamos à Categoria
-        self.product = Product.objects.create(title='Microfone Redragon', price=300.00)
+        self.product = Product.objects.create(
+            name='Clean Code', 
+            description='Livro de programação', \
+            price=100.00,
+            active=True
+        )
         self.product.category.add(self.category)
-
-    def test_integridade_category(self):
-        """Verifica se a categoria foi criada corretamente"""
-        self.assertEqual(self.category.title, 'Periféricos')
-
-    def test_integridade_product(self):
-        """Verifica se o produto está ligado à categoria correta"""
-        self.assertEqual(self.product.title, 'Microfone Redragon')
-        self.assertIn(self.category, self.product.category.all())
-
-    def test_integridade_order(self):
-        """Verifica se o pedido (Order) liga o utilizador ao produto"""
-        order = Order.objects.create(user=self.user)
-        order.product.add(self.product)
         
-        self.assertEqual(order.user.username, 'kaio_teste')
-        self.assertEqual(order.product.count(), 1)
-        self.assertEqual(order.product.first().title, 'Microfone Redragon')
+        self.order = Order.objects.create(user=self.user)
+        self.order.product.add(self.product)
+        
+    def test_category_serializer(self):
+        """Valida a serialização do modelo Category"""
+        serializer = CategorySerializer(instance=self.category)
+        data = serializer.data
+        self.assertEqual(data['title'], 'Livros')
+        self.assertEqual(data['slug'], 'livros')
+        self.assertTrue(data['active'])
+
+    def test_product_serializer_with_category(self):
+        """Valida a serialização do Product e o aninhamento de Category (GET)"""
+        serializer = ProductSerializer(instance=self.product)
+        data = serializer.data
+        self.assertEqual(data['name'], 'Clean Code')
+        self.assertEqual(data['category'][0]['title'], 'Livros')
+
+    def test_product_serializer_deserialization(self):
+        """Valida a criação de um Product enviando o category_id (POST)"""
+        data = {
+            "name": "Design Patterns",
+            "description": "Padrões de projeto",
+            "price": "120.00",
+            "category_id": [self.category.id],
+            "active": True
+        }
+        serializer = ProductSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        new_product = serializer.save()
+        self.assertIn(self.category, new_product.category.all())
+
+    def test_order_serializer(self):
+        """Valida a serialização do modelo Order e os campos aninhados"""
+        serializer = OrderSerializer(instance=self.order)
+        data = serializer.data
+        self.assertEqual(data['user'], self.user.id)
+        self.assertEqual(data['product'][0]['name'], 'Clean Code')
+
+    def test_order_serializer_deserialization(self):
+        """Valida a criação de uma Order enviando o product_id"""
+        data = {
+            "product_id": [self.product.id],
+            "user": self.user.id
+        }
+        serializer = OrderSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        new_order = serializer.save()
+        self.assertIn(self.product, new_order.product.all())
